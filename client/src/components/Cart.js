@@ -6,8 +6,31 @@ import { CartContext } from '../context/CartContext';
 
 import CartItem from './CartItem';
 
+import {loadStripe} from '@stripe/stripe-js'
+import {request} from '../request'
+
 const Cart = () => {
+
   const { setIsOpen, cart, total, clearCart } = useContext(CartContext)
+
+  const stripePromise = loadStripe('pk_test_51Mv5llIzNMEUqDzv2jxNEckzPL2Nsk7cpNybdnmMdhqQle9Qf6OAq85Mj77zAmpfwdHshWcJ90OS4nJ9kmKEIenz00XSAT4IQF')
+
+  const handlePayment = async () => {
+    try {
+      const stripe = await stripePromise
+      const res = await request.post('/orders', {
+        cart,
+      })
+
+      await stripe.redirectToCheckout({
+        sessionId: res.data.stripeSession.id,
+      })
+      console.log(stripe, res)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
   return (
     <div className=' w-full h-full px-4 text-white'>
       <div>
@@ -44,7 +67,7 @@ const Cart = () => {
             <button onClick={clearCart} className='btn btn-accent hover:bg-accent-hover text-primary' type="">
               Clear cart
             </button>
-            <button className='btn btn-accent hover:bg-accent-hover text-primary flex-1 px-2 gap-x-2' type="">
+            <button onClick={handlePayment} className='btn btn-accent hover:bg-accent-hover text-primary flex-1 px-2 gap-x-2' type="">
               Checkout
               <IoArrowForward className=' text-lg' />
             </button>
